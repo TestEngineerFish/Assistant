@@ -38,6 +38,7 @@ struct AddRecordView: View {
                 }
             }
         }
+#if os(iOS)
         .navigationBarTitle(isEditing ? "编辑记录" : "添加记录", displayMode: .inline)
         .navigationBarItems(trailing: Button("保存") {
             // 保存数据到数据库
@@ -52,5 +53,6 @@ struct AddRecordView: View {
                 }
             }
         }
+#endif
     }
 }
