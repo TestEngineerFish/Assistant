@@ -7,8 +7,16 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
-struct Tag: Hashable {
+@Model
+class Tag {
+    @Attribute(.unique) var id: UUID
     var name: String
-    var color: Color
+    var color: String?
+    init(id: UUID = UUID(), name: String, color: Color) {
+        self.id = id
+        self.name = name
+        self.color = color.toHex()
+    }
 }

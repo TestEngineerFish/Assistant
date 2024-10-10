@@ -2,7 +2,7 @@
 //  TagView.swift
 //  Assistant
 //
-//  Created by 老沙 on 2024/10/9.
+//  Created by 老沙 on 2024/10/10.
 //
 
 import SwiftUI
@@ -13,7 +13,7 @@ struct TagView: View {
     var body: some View {
         Text(tag.name)
             .padding(8)
-            .background(tag.color)
+            .background(Color.fromHex(tag.color ?? ""))
             .cornerRadius(10)
     }
 }

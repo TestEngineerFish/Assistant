@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct NewContentView: View {
-    @State private var accountRecords: [AccountRecord] = [] // 账号记录列表
+    @Query private var accountRecords: [AccountRecord] // 账号记录列表
     @State private var showingScanner = false
     @State private var showingAddRecord = false
     
@@ -42,14 +43,8 @@ struct NewContentView: View {
                 .sheet(isPresented: $showingScanner) {
                     ScannerView() // 扫码页面
                 }
-
-                Button(action: {
-                    showingAddRecord = true
-                }) {
+                NavigationLink(destination: AddRecordView(isEditing: false, record: AccountRecord())) {
                     Image(systemName: "plus")
-                }
-                .sheet(isPresented: $showingAddRecord) {
-                    AddRecordView(isEditing: false, record: AccountRecord.emptyRecord())
                 }
             })
 #endif
