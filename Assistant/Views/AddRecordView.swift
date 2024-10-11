@@ -8,40 +8,61 @@
 import SwiftUI
 
 struct AddRecordView: View {
+    
+    
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @State var isEditing: Bool // 区分添加和编辑状态
     @State var record: AccountRecord // 记录模型
-    @State private var newTag = ""
     @State private var selectedColor = Color.blue
     @State private var tags: [Tag] = []
     @State private var showToast = false
+    @FocusState private var focusedField: Field?
+    
+    enum Field: Hashable {
+        case name, account, password, remark
+    }
     
     var body: some View {
+        
         ZStack {
             Form {
                 Section(header: Text("账号信息")) {
                     TextField("名称", text: $record.name)
+                        .focused($focusedField, equals: .name)
+                        .submitLabel(.next)
+                        .onSubmit {
+                            focusedField = .account
+                        }
                     TextField("账号", text: $record.account)
+                        .focused($focusedField, equals: .account)
+                        .submitLabel(.next)
+                        .onSubmit {
+                            focusedField = .password
+                        }
                     TextField("密码", text: $record.password)
                         .textContentType(.password)
-                    TextField("备注", text: $record.note)
+                        .focused($focusedField, equals: .password)
+                        .submitLabel(.next)
+                        .onSubmit {
+                            focusedField = .remark
+                        }
                 }
+                Text(verbatim: "备注")
+                TextEditor(text: $record.note)
+                    .frame(height: 200)
+                    .submitLabel(.done)
+                    .focused($focusedField, equals: .remark)
                 
                 Section(header: Text("标签")) {
                     ScrollView(.horizontal) {
                         HStack {
-                            ForEach(record.tags, id: \.self) { tagsList in
-                                
+                            ForEach(record.tags, id: \.self) { tag in
+                                Text(tag.name)
                             }
                         }
                     }
-                    AddTagView(tags: $tags)
-                    Button(action: {
-                        // 弹出添加tag弹框
-                    }) {
-                        Text("添加标签")
-                    }
+                    AddTagView(tags: $record.tags)
                 }
                 if showToast {
                     ToastView(message: "操作成功")
@@ -52,6 +73,8 @@ struct AddRecordView: View {
                             }
                         }
                 }
+            }.onAppear {
+                focusedField = .name
             }
 #if os(iOS)
             .navigationBarTitle(isEditing ? "编辑记录" : "添加记录", displayMode: .inline)
@@ -86,6 +109,9 @@ struct AddRecordView: View {
                 }
             }
 #endif
+        }
+        .onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
     }
     
