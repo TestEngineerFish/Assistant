@@ -6,63 +6,69 @@
 //
 
 import SwiftUI
+import SwiftData
+
 
 struct AddRecordView: View {
     
-    
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var tags: [Tag]
     @State var isEditing: Bool // 区分添加和编辑状态
     @State var record: AccountRecord // 记录模型
+    @State var tmpTags: [Tag] = []
     @State private var selectedColor = Color.blue
-    @State private var tags: [Tag] = []
     @State private var showToast = false
+    @State private var newTagName: String = ""
     @FocusState private var focusedField: Field?
+    private let cellHeight: CGFloat = 50
     
     enum Field: Hashable {
         case name, account, password, remark
     }
     
     var body: some View {
-        
         ZStack {
             Form {
                 Section(header: Text("账号信息")) {
                     TextField("名称", text: $record.name)
-                        .focused($focusedField, equals: .name)
-                        .submitLabel(.next)
-                        .onSubmit {
-                            focusedField = .account
-                        }
+                        .frame(height: cellHeight)
                     TextField("账号", text: $record.account)
-                        .focused($focusedField, equals: .account)
-                        .submitLabel(.next)
-                        .onSubmit {
-                            focusedField = .password
-                        }
+                        .frame(height: cellHeight)
                     TextField("密码", text: $record.password)
+                        .frame(height: cellHeight)
                         .textContentType(.password)
-                        .focused($focusedField, equals: .password)
-                        .submitLabel(.next)
-                        .onSubmit {
-                            focusedField = .remark
-                        }
                 }
                 Text(verbatim: "备注")
                 TextEditor(text: $record.note)
-                    .frame(height: 200)
+                    .frame(height: 100)
                     .submitLabel(.done)
-                    .focused($focusedField, equals: .remark)
                 
                 Section(header: Text("标签")) {
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(record.tags, id: \.self) { tag in
-                                Text(tag.name)
+                    HStack {
+                        ScrollView(.horizontal) {
+                            HStack {
+                                ForEach(tmpTags) { tag in
+                                    TagView(tag: tag, isSelected: true)
+                                }
                             }
+                        }.padding()
+                        TextField("新增标签", text: $newTagName)
+                            .frame(width: 100)
+                            .onSubmit {
+                                saveTag()
+                            }
+                    }
+                    
+                    let coloums = [GridItem(.adaptive(minimum: 80), spacing: 10)]
+                    LazyVGrid(columns: coloums, alignment: .leading, spacing: 15) {
+                        ForEach(tags, id: \.id) { tag in
+                            TagView(tag: tag, isSelected: record.tags.contains(tag) || tmpTags.contains(tag))
+                                .onTapGesture {
+                                    tmpTags.append(tag)
+                                }
                         }
                     }
-                    AddTagView(tags: $record.tags)
                 }
                 if showToast {
                     ToastView(message: "操作成功")
@@ -73,8 +79,6 @@ struct AddRecordView: View {
                             }
                         }
                 }
-            }.onAppear {
-                focusedField = .name
             }
 #if os(iOS)
             .navigationBarTitle(isEditing ? "编辑记录" : "添加记录", displayMode: .inline)
@@ -111,12 +115,33 @@ struct AddRecordView: View {
 #endif
         }
         .onTapGesture {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            hideKeyboard()
         }
+        .onAppear {
+            self.tmpTags = record.tags
+            UITextField.appearance().inputAssistantItem.leadingBarButtonGroups = []
+            UITextField.appearance().inputAssistantItem.trailingBarButtonGroups = []
+        }
+    }
+    
+    func hideKeyboard() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            windowScene.windows.first?.endEditing(true)
+        }
+    }
+    
+    // 保存Tag
+    private func saveTag() {
+        let tag = Tag(name: newTagName, color: .red)
+        modelContext.insert(tag)
+        try? modelContext.save() // 保存到持久化存储
+        self.tmpTags.append(tag)
+        newTagName = ""
     }
     
     // 保存记录
     private func saveRecord() {
+        record.tags = tmpTags
         modelContext.insert(record)
         try? modelContext.save() // 保存到持久化存储
         showToast = true
@@ -129,3 +154,5 @@ struct AddRecordView: View {
         showToast = true
     }
 }
+
+

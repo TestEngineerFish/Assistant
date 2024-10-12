@@ -9,11 +9,17 @@ import SwiftUI
 
 struct TagView: View {
     var tag: Tag
+    var isSelected: Bool
     
     var body: some View {
-        Text(tag.name)
-            .padding(8)
-            .background(Color.fromHex(tag.color ?? ""))
-            .cornerRadius(10)
+        Text(verbatim: tag.name)
+            .padding(5)
+            .frame(maxWidth: 150)
+            .overlay {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .stroke(.gray, lineWidth: 1)
+            }
+            .background(isSelected ? Color.red : Color.clear)
+            .lineLimit(1)
     }
 }

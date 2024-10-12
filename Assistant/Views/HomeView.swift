@@ -22,12 +22,11 @@ struct NewContentView: View {
                 } else {
                     ScrollView {
                         ForEach(accountRecords) { record in
-                            AccountCardView(record: record)
-                                .padding(.vertical, 5)
-                                .onTapGesture {
-                                    // 跳转到编辑页面
-                                    showingAddRecord = true
-                                }
+                            NavigationLink(destination: AddRecordView(isEditing: false, record: record)) {
+                                AccountCardView(record: record)
+                                    .padding(.vertical, 5)
+                            }
+                            
                         }
                     }
                 }
